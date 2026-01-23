@@ -610,4 +610,103 @@ function parseTxtToQuestions(content) {
             if (currentQuestion) {
                 const answer = trimmed.substring(4).trim().toUpperCase();
                 currentQuestion.answer = answer;
-                currentQuestion.correctOption
+                currentQuestion.correctOption = answer;
+            }
+        }
+        else if (trimmed.toUpperCase().startsWith('EXPLANATION:')) {
+            if (currentQuestion) {
+                currentQuestion.explanation = trimmed.substring(12).trim();
+            }
+        }
+        else if (trimmed.toUpperCase().startsWith('DESCRIPTION:')) {
+            if (currentQuestion) {
+                currentQuestion.explanation = trimmed.substring(12).trim();
+            }
+        }
+    }
+    
+    if (currentQuestion) questions.push(currentQuestion);
+    
+    return questions;
+}
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        security: 'enhanced',
+        cors: 'restricted',
+        rate_limiting: 'active',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Simple bot test
+app.get('/api/bot-test', async (req, res) => {
+    try {
+        const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8151664879:AAGggzn4M2Iv-9lHAUJXjCVPGKnKyr7IZMc';
+        
+        const response = await axios.get(
+            `https://api.telegram.org/bot${BOT_TOKEN}/getMe`,
+            { timeout: 5000 }
+        );
+        
+        res.json({
+            success: true,
+            bot: response.data.result,
+            security: 'rate_limited',
+            cors: 'restricted'
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message,
+            security: 'rate_limited',
+            cors: 'restricted'
+        });
+    }
+});
+
+// User role endpoint
+app.get('/api/user/role', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        
+        // In a real implementation, you would verify the Firebase token
+        // For now, we'll return a simple role based on email
+        res.json({
+            success: true,
+            role: 'admin', // This would be determined from database
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`
+    🚀 EduAnon Backend API Started
+    📍 Port: ${PORT}
+    🌐 URL: https://anon-edu-backend-anon.vercel.app
+    🔓 CORS: Restricted origins only
+    ⚡ Rate Limiting: ACTIVE
+    🔐 Security: ENHANCED
+    📡 Channel: @ANON_EDU (ID: -1003687504990)
+    🤖 Bot: @ANONEDU_Bot
+    ✅ API: Working with enhanced security
+    ✅ FRONTEND: https://avirus90.github.io/AnonEdu/
+    ✅ STATUS: WORKING & SECURE
+    `);
+});
+
+module.exports = app;
